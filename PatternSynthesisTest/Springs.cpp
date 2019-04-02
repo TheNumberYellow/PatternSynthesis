@@ -87,7 +87,7 @@ void Spring::updateForces()
 
 }
 
-SpringLine::SpringLine(b2Vec2 startPoint, b2Vec2 endPoint, std::vector<Spring*> springs, std::function<float32(std::vector<float32>, std::vector<float32>, float32, unsigned int)> restAngleFunc) :
+SpringLine::SpringLine(b2Vec2 startPoint, b2Vec2 endPoint, std::vector<Spring*> springs, RASF restAngleFunc) :
 	startPoint(startPoint), endPoint(endPoint),
 	springs(springs),
 	restAngleFunc(restAngleFunc)
@@ -186,7 +186,7 @@ void SpringWorld::update(float32 timeStep) {
 	world->Step(timeStep, 80, 30); // Hard-coded position/velocity iterations
 }
 
-void SpringWorld::createSpringLine(b2Vec2 from, b2Vec2 to, unsigned int numSegments, std::function<float32(std::vector<float32>, std::vector<float32>, float32, unsigned int)> restAngleFunc, bool dynamic) {
+void SpringWorld::createSpringLine(b2Vec2 from, b2Vec2 to, unsigned int numSegments, RASF restAngleFunc, bool dynamic) {
 	// TODO: this function is heavily coupled to box2d
 
 	std::vector<Spring*> springs;
@@ -251,26 +251,15 @@ void SpringWorld::createSpringLine(b2Vec2 from, b2Vec2 to, unsigned int numSegme
 	springLines.push_back(line);
 }
 
-void SpringWorld::createSpringLine(Edge edge, unsigned int numSegments, std::function<float32(std::vector<float32>, std::vector<float32>, float32, unsigned int)> restAngleFunc, bool dynamic) {
+void SpringWorld::createSpringLine(Edge edge, unsigned int numSegments, RASF restAngleFunc, bool dynamic) {
 	createSpringLine(edge.a, edge.b, numSegments, restAngleFunc, dynamic);
 }
 
 // numSegments: number of segments per box side
 // sideAngle: angle of springs of box sides (corners are 90 degrees)
-void SpringWorld::createSpringBox(unsigned int numSegments, float32 sideAngle) {
+void SpringWorld::createSpringBox(unsigned int numSegments, RASF_TYPE type, float32 sideAngle) {
 
-	auto func = [sideAngle](std::vector<float32> startAngles, std::vector<float32> endAngles, float32 T, unsigned int numSegments) {
-		float32 ret = 0.0f;
-
-		// Lerp
-		//float32 start = startAngles.size() > 0 ? startAngles[0] : 0.0f;
-		//float32 end = endAngles.size() > 0 ? endAngles[0] : 0.0f;
-
-		//ret = 0.1 * lerp(-start, end, T);;
-		//return ret;
-		
-		return sideAngle * DEGTORAD;
-	};
+	auto func = getRASF(type, sideAngle);
 
 	createSpringLine(b2Vec2(-5.0f, -5.0f), b2Vec2(5.0f, -5.0f), numSegments, func);
 	createSpringLine(b2Vec2(5.0f, -5.0f), b2Vec2(5.0f, 5.0f), numSegments, func);
@@ -281,7 +270,9 @@ void SpringWorld::createSpringBox(unsigned int numSegments, float32 sideAngle) {
 }
 
 
-void SpringWorld::createSystem(Border border, std::vector<Edge> edges, float32 angleSeverity) {
+void SpringWorld::createSystem(Border border, std::vector<Edge> edges, RASF_TYPE type,  float32 angleSeverity) {
+	auto func = getRASF(type, angleSeverity);
+
 	border.minX *= INVSCALE;
 	border.minY *= INVSCALE;
 	border.maxX *= INVSCALE;
@@ -289,20 +280,22 @@ void SpringWorld::createSystem(Border border, std::vector<Edge> edges, float32 a
 
 	
 	for (Edge e : edges) {
+		
+
 		float32 distance = b2Distance(e.a, e.b);
+		
 		unsigned int numSegments = distance * 2.0f; // TODO: Too many segments may lead to glitchyness? Not sure exactly, will look into box2d 
 		
 		if (numSegments == 0) numSegments = 1;
 		
-		//std::cout << "Edge a: " << e.a.x << " " << e.a.y << "  Edge b: " << e.b.x << " " << e.b.y << std::endl;
 		
 		// If either edge end is within border, line is dynamic
 		if (border.isWithinBorder(e.a) || border.isWithinBorder(e.b)) {
-			createSpringLine(e, numSegments, aveAngleRASF, true);
+			createSpringLine(e, numSegments, func, true);
 		}
 		// If both ends are outside border, it is a non-dynamic border line
 		else {
-			createSpringLine(e, numSegments, aveAngleRASF, false);
+			createSpringLine(e, numSegments, func, false);
 		}
 	}
 
@@ -310,12 +303,13 @@ void SpringWorld::createSystem(Border border, std::vector<Edge> edges, float32 a
 
 }
 
-void SpringWorld::createSquiggle(unsigned int numSegments)
+void SpringWorld::createSquiggle(unsigned int numSegments, RASF_TYPE type, float32 angleSeverity)
 {
+	auto func = getRASF(type, angleSeverity);
 
-	createSpringLine(b2Vec2(-10.0f, -5.0f), b2Vec2(0.0f, -5.0f), numSegments, aveAngleRASF);
-	createSpringLine(b2Vec2(0.0f, -5.0f), b2Vec2(0.0f, 5.0f), numSegments, aveAngleRASF);
-	createSpringLine(b2Vec2(0.0f, 5.0f), b2Vec2(10.0f, 5.0f), numSegments, aveAngleRASF);
+	createSpringLine(b2Vec2(-10.0f, -5.0f), b2Vec2(0.0f, -5.0f), numSegments, func);
+	createSpringLine(b2Vec2(0.0f, -5.0f), b2Vec2(0.0f, 5.0f), numSegments, func);
+	createSpringLine(b2Vec2(0.0f, 5.0f), b2Vec2(10.0f, 5.0f), numSegments, func);
 
 	initSpringWorld();
 }

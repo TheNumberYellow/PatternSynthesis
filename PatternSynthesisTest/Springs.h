@@ -6,9 +6,7 @@
 #include <iostream>
 
 #include "Voronoi.h"
-
-constexpr auto DEGTORAD = 0.0174532925199432957f;
-constexpr auto RADTODEG = 57.295779513082320876f;
+#include "RASF.h"
 
 // Clamps angle between -pi and pi
 static float32 clampAngle(float32 angle);
@@ -69,7 +67,7 @@ struct SpringLine {
 
 	float32 initialAngle = 0.0f;
 
-	SpringLine(b2Vec2 startPoint, b2Vec2 endPoint, std::vector<Spring*> springs, std::function<float32(std::vector<float32>, std::vector<float32>, float32, unsigned int)> restAngleFunc);
+	SpringLine(b2Vec2 startPoint, b2Vec2 endPoint, std::vector<Spring*> springs, RASF restAngleFunc);
 };
 
 // To store all spring lines in vector for updating, creating new spring lines etc.
@@ -83,21 +81,21 @@ public:
 	// Apply forces on all springs, and takes physics timestep
 	void update(float32 timeStep);
 
-	void createSpringLine(b2Vec2 from, b2Vec2 to, unsigned int numSegments, std::function<float32(std::vector<float32>, std::vector<float32>, float32, unsigned int)> restAngleFunc, bool dynamic = true);
+	void createSpringLine(b2Vec2 from, b2Vec2 to, unsigned int numSegments, RASF restAngleFunc, bool dynamic = true);
 
-	void createSpringLine(Edge edge, unsigned int numSegments, std::function<float32(std::vector<float32>, std::vector<float32>, float32, unsigned int)> restAngleFunc, bool dynamic = true);
+	void createSpringLine(Edge edge, unsigned int numSegments, RASF restAngleFunc, bool dynamic = true);
 
 	// numSegments: number of segments per box side
 	// sideAngle: angle of springs of box sides (corners are 90 degrees)
-	void createSpringBox(unsigned int numSegments, float32 sideAngle);
+	void createSpringBox(unsigned int numSegments,  RASF_TYPE type, float32 sideAngle);
 
 	// Border: Edges outside of border will be static (only if both points in edge are outside border)
 	// Edges: Edges of system
 	// Angle Severity: rest angle function multiplier
-	void createSystem(Border border, std::vector<Edge> edges, float32 angleSeverity = 1.0f);
+	void createSystem(Border border, std::vector<Edge> edges, RASF_TYPE type, float32 angleSeverity = 1.0f);
 	
 	// numSegments: number of segments per squiggle side
-	void createSquiggle(unsigned int numSegments);
+	void createSquiggle(unsigned int numSegments, RASF_TYPE type, float32 angleSeverity = 1.0f);
 
 	std::vector<Edge> getSpringEdges();
 private:

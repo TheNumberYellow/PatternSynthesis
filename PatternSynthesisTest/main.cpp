@@ -87,6 +87,26 @@ void saveScreenshot(sf::RenderWindow& window, std::string filename) {
 
 }
 
+RASF_TYPE decideRASFType() {
+	std::cout << "Rest angle set function (RASF) type?" << std::endl;
+	std::cout << "Press [1] for constant RASF." << std::endl;
+	std::cout << "Press [2] for basic LERP RASF." << std::endl;
+	std::cout << "Press [3] for average angle RASF." << std::endl;
+	
+	int input = 0;
+	std::cin >> input;
+	switch (input) {
+	case 1:
+		return RASF_CONSTANT;
+	case 2:
+		return RASF_BASIC_LERP;
+	case 3:
+		return RASF_AVERAGE;
+	default:
+		return RASF_CONSTANT;
+	}
+}
+
 void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsigned int screenHeight) {
 
 	while (true) {
@@ -94,10 +114,10 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 		std::cout << "Press [2] for box diagram." << std::endl;
 		std::cout << "Press [3] for test squiggle diagram." << std::endl;
 		std::cout << "Press [4] for Voronoi diagram." << std::endl;
-		std::string input;
+		int input;
 		std::cin >> input;
 		
-		switch (std::atoi(input.c_str())) {
+		switch (input) {
 		case 1:
 		{
 			unsigned int springs = 0;
@@ -110,36 +130,59 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 		case 2:
 		{
 			unsigned int sideSprings = 0;
+			RASF_TYPE type;
+			float32 rasfValue = 0.0f;
+
 			std::cout << "Springs per side?" << std::endl;
 			std::cin >> sideSprings;
 			
-			float32 sideAngle = 0.0f;
-			std::cout << "Side angle?" << std::endl;
-			std::cin >> sideAngle;
+			type = decideRASFType();
+
+			std::cout << "RASF value? (either a multiplier value, or an angle in degrees)" << std::endl;
+			std::cin >> rasfValue;
 
 			std::cout << "Creating box." << std::endl;
-			sWorld->createSpringBox(sideSprings, sideAngle);
+			sWorld->createSpringBox(sideSprings, type, rasfValue);
 		}
 			return;
 		case 3:
 		{
 			unsigned int sideSprings = 0;
+			RASF_TYPE type;
+			float32 rasfValue = 0.0f;
+
 			std::cout << "Springs per side?" << std::endl;
 			std::cin >> sideSprings;
+			
+			type = decideRASFType();
+			
+			std::cout << "RASF value? (either a multiplier value, or an angle in degrees)" << std::endl;
+			std::cin >> rasfValue;
+
 			std::cout << "Creating test squiggle." << std::endl;
-			sWorld->createSquiggle(sideSprings);
+			sWorld->createSquiggle(sideSprings, type, rasfValue);
 
 			return;
 		}
 		case 4:
 		{
 			unsigned int numPoints = 0;
+			RASF_TYPE type;
+			float32 rasfValue = 0.0f;
+
 			std::cout << "Number of points in Voronoi diagram?" << std::endl;
 			std::cin >> numPoints;
+			
+			type = decideRASFType();
+			
+			std::cout << "RASF value? (either a multiplier value, or an angle in degrees)" << std::endl;
+			std::cin >> rasfValue;
+
 			std::cout << "Creating Voronoi diagram." << std::endl;
+			
 			Voronoi v(screenWidth * INVSCALE, screenHeight * INVSCALE, numPoints);
 			Border b((-(int)screenWidth / 2.0f), (-(int)screenHeight / 2.0f), ((int)screenWidth / 2.0f), ((int)screenHeight / 2.0f));
-			sWorld->createSystem(b, v.edges, 1.0f);
+			sWorld->createSystem(b, v.edges, type, rasfValue);
 		}
 			return;
 		default:
