@@ -97,6 +97,8 @@ public:
 	// numSegments: number of segments per squiggle side
 	void createSquiggle(unsigned int numSegments, RASF_TYPE type, float32 angleSeverity = 1.0f);
 
+	void createFractalTree(unsigned int fractalDepth, RASF_TYPE, float32 angleSeverity = 1.0f);
+
 	std::vector<Edge> getSpringEdges();
 private:
 
@@ -112,6 +114,8 @@ private:
 	
 	// Connects spring lines together then initializes rest angles
 	void initSpringWorld();
+
+	void drawTree(float32 x1, float32 y1, float32 angle, int depth, RASF func);
 };
 
 

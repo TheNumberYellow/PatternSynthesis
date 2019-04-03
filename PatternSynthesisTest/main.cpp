@@ -114,6 +114,7 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 		std::cout << "Press [2] for box diagram." << std::endl;
 		std::cout << "Press [3] for test squiggle diagram." << std::endl;
 		std::cout << "Press [4] for Voronoi diagram." << std::endl;
+		std::cout << "Press [5] for fractal tree diagram." << std::endl;
 		int input;
 		std::cin >> input;
 		
@@ -185,6 +186,23 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 			sWorld->createSystem(b, v.edges, type, rasfValue);
 		}
 			return;
+		case 5:
+		{
+			unsigned int fractalDepth = 0;
+			RASF_TYPE type;
+			float32 rasfValue = 0.0f;
+
+			std::cout << "Fractal depth?" << std::endl;
+			std::cin >> fractalDepth;
+
+			type = decideRASFType();
+
+			std::cout << "RASF value? (either a multiplier value, or an angle in degrees)" << std::endl;
+			std::cin >> rasfValue;
+
+			sWorld->createFractalTree(fractalDepth, type, rasfValue);
+		}
+			return;	
 		default:
 			std::cout << "Incorrect input." << std::endl;
 			break;
@@ -207,25 +225,12 @@ int main() {
 	unsigned int screenWidth = 800;
 	unsigned int screenHeight = 800;
 	
-	auto func = [](float32 start, float32 end, float32 T) {
-		return 0.0f;
-	};
-	
-	//sWorld.createSpringLine(b2Vec2(-400 * INVSCALE, 0.0f), b2Vec2(400 * INVSCALE, 0.0f), 2, func, true);
-	//sWorld.createSpringLine(b2Vec2(400 * INVSCALE, 0.0f), b2Vec2(-400 * INVSCALE, 0.0f), 2, func, true);
-	
-
 	decidePatternToCreate(&sWorld, screenWidth, screenHeight);
-	//sWorld.createSpringBox(6, 20);
-
-	//for (int i = 0; i < sWorld.springLines.size(); i++) {
-	//	std::cout << "SpringLine " << i << " has angle " << sWorld.springLines[i]->startAngles[0] * RADTODEG << " at start and angle " << sWorld.springLines[i]->endAngles[0] * RADTODEG << " at end.\n";
-	//}
-
+	
 	// Create window
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 4;
-	sf::RenderWindow window(sf::VideoMode(screenWidth, screenHeight), "PSTest", sf::Style::Default, settings);
+	sf::RenderWindow window(sf::VideoMode(screenWidth, screenHeight), "PS", sf::Style::Default, settings);
 	window.setFramerateLimit(0); // TODO: maybe enable vsync and just make springs faster (not that it matters for pattern synthesis)
 
 	time_t timeStart = time(NULL);

@@ -314,6 +314,33 @@ void SpringWorld::createSquiggle(unsigned int numSegments, RASF_TYPE type, float
 	initSpringWorld();
 }
 
+
+void SpringWorld::drawTree(float32 x1, float32 y1, float32 angle, int depth, RASF func)
+{
+	if (depth) {
+		float32 x2 = (x1 + std::cos(angle) * depth * 1.15f);
+		float32 y2 = (y1 + std::sin(angle) * depth * 1.15f);
+		
+		float32 distance = b2Distance(b2Vec2(x1, y1), b2Vec2(x2, y2));
+		unsigned int numSegments = distance * 2.0f; // TODO: Too many segments may lead to glitchyness? Not sure exactly, will look into box2d 
+
+		if (numSegments == 0) numSegments = 1;
+
+		createSpringLine(b2Vec2(x1, y1), b2Vec2(x2, y2), numSegments, func);
+		drawTree(x2, y2, angle - (20.0f * DEGTORAD), depth - 1, func);
+		drawTree(x2, y2, angle + (20.0f * DEGTORAD), depth - 1, func);
+	}
+}
+
+void SpringWorld::createFractalTree(unsigned int fractalDepth, RASF_TYPE type, float32 angleSeverity)
+{
+	auto func = getRASF(type, angleSeverity);
+
+	drawTree(0.0f, 10.0f, -90.0f * DEGTORAD, fractalDepth, func);
+	
+	initSpringWorld();
+}
+
 std::vector<Edge> SpringWorld::getSpringEdges()
 {
 	std::vector<Edge> edges;
