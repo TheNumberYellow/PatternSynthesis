@@ -2,14 +2,9 @@
 
 #include "Voronoi.h"
 #include "jc_voronoi.h"
+#include "util.h"
 #include <time.h>
 
-float32 RandomFloat(float32 a, float32 b) {
-	float32 random = ((float32)rand()) / (float32)RAND_MAX;
-	float32 diff = b - a;
-	float32 r = random * diff;
-	return a + r;
-}
 
 Voronoi::Voronoi(float32 width, float32 height, std::vector<b2Vec2> points) {
 	createDiagram(width, height, points);

@@ -2,6 +2,8 @@
 #include <vector>
 #include <Box2D\Box2D.h>
 
+#include "util.h"
+
 constexpr auto DEGTORAD = 0.0174532925199432957f;
 constexpr auto RADTODEG = 57.295779513082320876f;
 
@@ -11,6 +13,8 @@ enum RASF_TYPE {
 	RASF_CONSTANT,
 	RASF_AVERAGE,
 	RASF_BASIC_LERP,
+	RASF_RANDOMIZED,
+	RASF_SINWAVE
 };
 
 inline float32 lerp(float32 a, float32 b, float32 t)
@@ -65,6 +69,26 @@ static RASF getConstantRASF(float32 angle) {
 	return constantRASF;
 }
 
+static RASF getRandomizedRASF(float32 multiplier) {
+	auto randomizedRASF = [multiplier](std::vector<float32> startAngles, std::vector<float32> endAngles, float32 T, unsigned int numSegments) {
+		//float32 invNumSegments = 1.0f / (float32)numSegments;
+		float32 minimizer = 0.1f;
+
+		return multiplier * minimizer * RandomFloat(-90.0f * DEGTORAD, 90.0f * DEGTORAD);
+	};
+
+	return randomizedRASF;
+}
+
+static RASF getSINWaveRASF(float32 multiplier) {
+	auto SINWaveRASF = [multiplier](std::vector<float32> startAngles, std::vector<float32> endAngles, float32 T, unsigned int numSegments) {
+		float32 ret = sin(T * (2 * b2_pi)) * multiplier;
+		return ret;
+	};
+
+	return SINWaveRASF;
+}
+
 // type: Type of rest angle function to get
 // value: parameter for rest angle function (depends on type)
 static RASF getRASF(RASF_TYPE type, float32 value = 1.0f) {
@@ -76,6 +100,15 @@ static RASF getRASF(RASF_TYPE type, float32 value = 1.0f) {
 		break;
 	case RASF_BASIC_LERP:
 		return getLerpRASF();
+		break;
+	case RASF_RANDOMIZED:
+		return getRandomizedRASF(value);
+		break;
+	case RASF_SINWAVE:
+		return getSINWaveRASF(value);
+		break;
+	default:
+		return getConstantRASF(value);
 		break;
 	}
 }

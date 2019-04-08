@@ -8,8 +8,6 @@
 #include "Voronoi.h"
 #include "RASF.h"
 
-// Clamps angle between -pi and pi
-static float32 clampAngle(float32 angle);
 
 float32 lerp(float32 a, float32 b, float32 t);
 
@@ -97,7 +95,9 @@ public:
 	// numSegments: number of segments per squiggle side
 	void createSquiggle(unsigned int numSegments, RASF_TYPE type, float32 angleSeverity = 1.0f);
 
-	void createFractalTree(unsigned int fractalDepth, RASF_TYPE, float32 angleSeverity = 1.0f);
+	void createFractalTree(unsigned int fractalDepth, RASF_TYPE type, float32 angleSeverity = 1.0f);
+	
+	void createRandomizedFractalTree(unsigned int fractalDepth, RASF_TYPE type, float32 rasfValue = 1.0f);
 
 	std::vector<Edge> getSpringEdges();
 private:
@@ -116,6 +116,7 @@ private:
 	void initSpringWorld();
 
 	void drawTree(float32 x1, float32 y1, float32 angle, int depth, RASF func);
+	void drawRandomizedTree(float32 x1, float32 y1, float32 angle, int depth, RASF func);
 };
 
 

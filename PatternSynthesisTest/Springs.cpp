@@ -1,19 +1,6 @@
 #include "Springs.h"
-#include "RASF.h"
 
 static const float INVSCALE = 1.0f / 30.0f;
-
-float32 clampAngle(float32 angle)
-{
-	//return fmod((angle + b2_pi), (2.0f * b2_pi)) - b2_pi;
-	if (angle > b2_pi) {
-		return angle - (2.0f * b2_pi);
-	}
-	else if (angle < -b2_pi){
-		return angle + (2.0f * b2_pi);
-	}
-	return angle;
-}
 
 Spring::Spring(b2Body* body, b2Body* nextBody, b2World* world) :
 	body(body), nextBody(nextBody)
@@ -201,8 +188,8 @@ void SpringWorld::createSpringLine(b2Vec2 from, b2Vec2 to, unsigned int numSegme
 
 	if (dynamic) sectionBodyDef.type = b2_dynamicBody;
 	
-	sectionBodyDef.angularDamping = 1.0f; // TODO: May change this
-	sectionBodyDef.linearDamping = 1.0f; // TODO: and this
+	sectionBodyDef.angularDamping = 2.0f; // TODO: May change this
+	sectionBodyDef.linearDamping = 2.0f; // TODO: and this
 
 	b2Body* firstBody = nullptr;
 	b2Body* lastBody = nullptr;
@@ -246,9 +233,9 @@ void SpringWorld::createSpringLine(b2Vec2 from, b2Vec2 to, unsigned int numSegme
 	
 	SpringLine* line = new SpringLine(from, to, springs, restAngleFunc);
 	line->startBody = firstBody;
-	line->endBody = lastBody;
+line->endBody = lastBody;
 
-	springLines.push_back(line);
+springLines.push_back(line);
 }
 
 void SpringWorld::createSpringLine(Edge edge, unsigned int numSegments, RASF restAngleFunc, bool dynamic) {
@@ -270,7 +257,7 @@ void SpringWorld::createSpringBox(unsigned int numSegments, RASF_TYPE type, floa
 }
 
 
-void SpringWorld::createSystem(Border border, std::vector<Edge> edges, RASF_TYPE type,  float32 angleSeverity) {
+void SpringWorld::createSystem(Border border, std::vector<Edge> edges, RASF_TYPE type, float32 angleSeverity) {
 	auto func = getRASF(type, angleSeverity);
 
 	border.minX *= INVSCALE;
@@ -278,17 +265,17 @@ void SpringWorld::createSystem(Border border, std::vector<Edge> edges, RASF_TYPE
 	border.maxX *= INVSCALE;
 	border.maxY *= INVSCALE;
 
-	
+
 	for (Edge e : edges) {
-		
+
 
 		float32 distance = b2Distance(e.a, e.b);
-		
-		unsigned int numSegments = distance * 2.0f; // TODO: Too many segments may lead to glitchyness? Not sure exactly, will look into box2d 
-		
+
+		unsigned int numSegments = distance * 4.0f; // TODO: Too many segments may lead to glitchyness? Not sure exactly, will look into box2d 
+
 		if (numSegments == 0) numSegments = 1;
-		
-		
+
+
 		// If either edge end is within border, line is dynamic
 		if (border.isWithinBorder(e.a) || border.isWithinBorder(e.b)) {
 			createSpringLine(e, numSegments, func, true);
@@ -318,17 +305,42 @@ void SpringWorld::createSquiggle(unsigned int numSegments, RASF_TYPE type, float
 void SpringWorld::drawTree(float32 x1, float32 y1, float32 angle, int depth, RASF func)
 {
 	if (depth) {
-		float32 x2 = (x1 + std::cos(angle) * depth * 1.15f);
-		float32 y2 = (y1 + std::sin(angle) * depth * 1.15f);
-		
+		float32 x2 = (x1 + std::cos(angle) * depth * 1.05f);
+		float32 y2 = (y1 + std::sin(angle) * depth * 1.05f);
+
 		float32 distance = b2Distance(b2Vec2(x1, y1), b2Vec2(x2, y2));
 		unsigned int numSegments = distance * 2.0f; // TODO: Too many segments may lead to glitchyness? Not sure exactly, will look into box2d 
 
 		if (numSegments == 0) numSegments = 1;
 
 		createSpringLine(b2Vec2(x1, y1), b2Vec2(x2, y2), numSegments, func);
-		drawTree(x2, y2, angle - (20.0f * DEGTORAD), depth - 1, func);
-		drawTree(x2, y2, angle + (20.0f * DEGTORAD), depth - 1, func);
+		drawTree(x2, y2, angle - (35.0f * DEGTORAD), depth - 1, func);
+		drawTree(x2, y2, angle + (35.0f * DEGTORAD), depth - 1, func);
+		//drawTree(x2, y2, angle + (20.0f * DEGTORAD), depth - 1, func);
+		//drawTree(x2, y2, angle - (20.0f * DEGTORAD), depth - 1, func);
+	}
+}
+
+void SpringWorld::drawRandomizedTree(float32 x1, float32 y1, float32 angle, int depth, RASF func)
+{
+	if (depth) {
+		float32 randDist = RandomFloat(0.1f, 1.4f);
+		float32 x2 = (x1 + std::cos(angle) * depth * randDist);
+		float32 y2 = (y1 + std::sin(angle) * depth * randDist);
+
+		float32 distance = b2Distance(b2Vec2(x1, y1), b2Vec2(x2, y2));
+		unsigned int numSegments = distance * 4.0f; // TODO: Too many segments may lead to glitchyness? Not sure exactly, will look into box2d 
+
+		if (numSegments == 0) numSegments = 1;
+
+		createSpringLine(b2Vec2(x1, y1), b2Vec2(x2, y2), numSegments, func);
+		
+		float32 randomAngle = RandomFloat(10.0f, 30.0f);
+				
+		if (RandomFloat(0.0f, 1.0f) > 0.04f) {
+			drawRandomizedTree(x2, y2, angle - (randomAngle * DEGTORAD), depth - 1, func);
+			drawRandomizedTree(x2, y2, angle + (randomAngle * DEGTORAD), depth - 1, func);
+		}
 	}
 }
 
@@ -336,10 +348,21 @@ void SpringWorld::createFractalTree(unsigned int fractalDepth, RASF_TYPE type, f
 {
 	auto func = getRASF(type, angleSeverity);
 
-	drawTree(0.0f, 10.0f, -90.0f * DEGTORAD, fractalDepth, func);
+	drawTree(0.0f, 7.0f, -90.0f * DEGTORAD, fractalDepth, func);
 	
 	initSpringWorld();
 }
+
+void SpringWorld::createRandomizedFractalTree(unsigned int fractalDepth, RASF_TYPE type, float32 rasfValue)
+{
+	auto func = getRASF(type, rasfValue);
+
+	drawRandomizedTree(0.0f, 14.0f, -90.0f * DEGTORAD, fractalDepth, func);
+
+	initSpringWorld();
+}
+
+
 
 std::vector<Edge> SpringWorld::getSpringEdges()
 {

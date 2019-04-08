@@ -90,9 +90,11 @@ void saveScreenshot(sf::RenderWindow& window, std::string filename) {
 RASF_TYPE decideRASFType() {
 	std::cout << "Rest angle set function (RASF) type?" << std::endl;
 	std::cout << "Press [1] for constant RASF." << std::endl;
-	std::cout << "Press [2] for basic LERP RASF." << std::endl;
+	std::cout << "Press [2] for basic LERP RASF. (Largest angles)" << std::endl;
 	std::cout << "Press [3] for average angle RASF." << std::endl;
-	
+	std::cout << "Press [4] for randomized RASF." << std::endl;
+	std::cout << "Press [5] for SIN wave RASF." << std::endl;
+
 	int input = 0;
 	std::cin >> input;
 	switch (input) {
@@ -102,6 +104,10 @@ RASF_TYPE decideRASFType() {
 		return RASF_BASIC_LERP;
 	case 3:
 		return RASF_AVERAGE;
+	case 4:
+		return RASF_RANDOMIZED;
+	case 5:
+		return RASF_SINWAVE;
 	default:
 		return RASF_CONSTANT;
 	}
@@ -115,6 +121,7 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 		std::cout << "Press [3] for test squiggle diagram." << std::endl;
 		std::cout << "Press [4] for Voronoi diagram." << std::endl;
 		std::cout << "Press [5] for fractal tree diagram." << std::endl;
+		std::cout << "Press [6] for randomized fractal tree diagram." << std::endl;
 		int input;
 		std::cin >> input;
 		
@@ -203,6 +210,23 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 			sWorld->createFractalTree(fractalDepth, type, rasfValue);
 		}
 			return;	
+		case 6:
+		{
+			unsigned int fractalDepth = 0;
+			RASF_TYPE type;
+			float32 rasfValue = 0.0f;
+
+			std::cout << "Fractal depth?" << std::endl;
+			std::cin >> fractalDepth;
+
+			type = decideRASFType();
+
+			std::cout << "RASF value? (either a multiplier value, or an angle in degrees)" << std::endl;
+			std::cin >> rasfValue;
+
+			sWorld->createRandomizedFractalTree(fractalDepth, type, rasfValue);
+		}
+			return;
 		default:
 			std::cout << "Incorrect input." << std::endl;
 			break;
@@ -218,15 +242,18 @@ void printHelpText() {
 }
 
 int main() {
+	srand(time(NULL));
+
 	// Create world, without gravity
 	b2Vec2 gravity(0.0f, 0.0f);
 	SpringWorld sWorld(new b2World(gravity));
 	
-	unsigned int screenWidth = 800;
-	unsigned int screenHeight = 800;
+	unsigned int screenWidth = 1000;
+	unsigned int screenHeight = 1000;
 	
 	decidePatternToCreate(&sWorld, screenWidth, screenHeight);
 	
+
 	// Create window
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 4;
