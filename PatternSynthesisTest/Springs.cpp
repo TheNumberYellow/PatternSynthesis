@@ -85,7 +85,7 @@ SpringLine::SpringLine(b2Vec2 startPoint, b2Vec2 endPoint, std::vector<Spring*> 
 
 // Goes through spring lines and attaches them together
 void SpringWorld::connectSpringLines() {
-	float32	minDistance = 0.00001; // TODO: maybe test this
+	float32	minDistance = 0.0001; // TODO: maybe test this
 	for (auto s1 = springLines.begin(); s1 != springLines.end(); s1++) {
 		for (auto s2 = s1 + 1; s2 != springLines.end(); s2++) {
 

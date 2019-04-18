@@ -100,6 +100,8 @@ public:
 	void createRandomizedFractalTree(unsigned int fractalDepth, RASF_TYPE type, float32 rasfValue = 1.0f);
 
 	std::vector<Edge> getSpringEdges();
+	
+	void initSpringWorld();
 private:
 
 	std::vector<SpringLine*> springLines;
@@ -113,7 +115,6 @@ private:
 	void initRestAngles();
 	
 	// Connects spring lines together then initializes rest angles
-	void initSpringWorld();
 
 	void drawTree(float32 x1, float32 y1, float32 angle, int depth, RASF func);
 	void drawRandomizedTree(float32 x1, float32 y1, float32 angle, int depth, RASF func);

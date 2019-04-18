@@ -94,6 +94,7 @@ RASF_TYPE decideRASFType() {
 	std::cout << "Press [3] for average angle RASF." << std::endl;
 	std::cout << "Press [4] for randomized RASF." << std::endl;
 	std::cout << "Press [5] for SIN wave RASF." << std::endl;
+	std::cout << "Press [6] for pseudorandomized RASF." << std::endl;
 
 	int input = 0;
 	std::cin >> input;
@@ -108,6 +109,8 @@ RASF_TYPE decideRASFType() {
 		return RASF_RANDOMIZED;
 	case 5:
 		return RASF_SINWAVE;
+	case 6:
+		return RASF_PSEUDORANDOM;
 	default:
 		return RASF_CONSTANT;
 	}
@@ -122,6 +125,8 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 		std::cout << "Press [4] for Voronoi diagram." << std::endl;
 		std::cout << "Press [5] for fractal tree diagram." << std::endl;
 		std::cout << "Press [6] for randomized fractal tree diagram." << std::endl;
+		std::cout << "Press [7] for uniformly random Voronoi diagram." << std::endl;
+		std::cout << "Press [8] for uniform grid." << std::endl;
 		int input;
 		std::cin >> input;
 		
@@ -129,10 +134,18 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 		case 1:
 		{
 			unsigned int springs = 0;
+			RASF_TYPE type;
+			float32 restAngle = 0.0f;
+
 			std::cout << "Springs in line?" << std::endl;
 			std::cin >> springs;
+
+			std::cout << "Rest angle? (in degrees)" << std::endl;
+			std::cin >> restAngle;
+
 			std::cout << "Creating line." << std::endl;
-			
+			sWorld->createSpringLine(b2Vec2(-10.0f, 0.0f), b2Vec2(10.0f, 0.0f), springs, getConstantRASF(restAngle));
+			sWorld->initSpringWorld();
 		}
 			return;
 		case 2:
@@ -188,7 +201,7 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 
 			std::cout << "Creating Voronoi diagram." << std::endl;
 			
-			Voronoi v(screenWidth * INVSCALE, screenHeight * INVSCALE, numPoints);
+			Voronoi v(screenWidth * INVSCALE, screenHeight * INVSCALE, numPoints, RANDOM);
 			Border b((-(int)screenWidth / 2.0f), (-(int)screenHeight / 2.0f), ((int)screenWidth / 2.0f), ((int)screenHeight / 2.0f));
 			sWorld->createSystem(b, v.edges, type, rasfValue);
 		}
@@ -227,6 +240,48 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 			sWorld->createRandomizedFractalTree(fractalDepth, type, rasfValue);
 		}
 			return;
+		case 7:
+		{
+			unsigned int numPoints = 0;
+			RASF_TYPE type;
+			float32 rasfValue = 0.0f;
+
+			std::cout << "Number of points in Voronoi diagram?" << std::endl;
+			std::cin >> numPoints;
+
+			type = decideRASFType();
+
+			std::cout << "RASF value? (either a multiplier value, or an angle in degrees)" << std::endl;
+			std::cin >> rasfValue;
+
+			std::cout << "Creating Voronoi diagram." << std::endl;
+
+			Voronoi v(screenWidth* INVSCALE, screenHeight* INVSCALE, numPoints, UNIFORM_RANDOM);
+			Border b((-(int)screenWidth / 2.0f), (-(int)screenHeight / 2.0f), ((int)screenWidth / 2.0f), ((int)screenHeight / 2.0f));
+			sWorld->createSystem(b, v.edges, type, rasfValue);
+		}
+			return;
+		case 8:
+		{
+			unsigned int numPoints = 0;
+			RASF_TYPE type;
+			float32 rasfValue = 0.0f;
+
+			std::cout << "Size of one side of grid?" << std::endl;
+			std::cin >> numPoints;
+
+			type = decideRASFType();
+
+			std::cout << "RASF value? (either a multiplier value, or an angle in degrees)" << std::endl;
+			std::cin >> rasfValue;
+
+			std::cout << "Creating Voronoi diagram." << std::endl;
+
+			Voronoi v(screenWidth* INVSCALE, screenHeight* INVSCALE, numPoints * numPoints, UNIFORM);
+			Border b((-(int)screenWidth / 2.0f), (-(int)screenHeight / 2.0f), ((int)screenWidth / 2.0f), ((int)screenHeight / 2.0f));
+			sWorld->createSystem(b, v.edges, type, rasfValue);
+		}
+			return;
 		default:
 			std::cout << "Incorrect input." << std::endl;
 			break;
@@ -263,9 +318,9 @@ int main() {
 	time_t timeStart = time(NULL);
 
 	std::cout << "There are " << sWorld.getWorld()->GetBodyCount() << " bodies in the scene." << std::endl;
-
+	
 	printHelpText();
-
+		
 	bool playing = false;
 	bool drawB = false;
 	while (window.isOpen()) {

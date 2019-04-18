@@ -14,7 +14,8 @@ enum RASF_TYPE {
 	RASF_AVERAGE,
 	RASF_BASIC_LERP,
 	RASF_RANDOMIZED,
-	RASF_SINWAVE
+	RASF_SINWAVE,
+	RASF_PSEUDORANDOM
 };
 
 inline float32 lerp(float32 a, float32 b, float32 t)
@@ -22,8 +23,8 @@ inline float32 lerp(float32 a, float32 b, float32 t)
 	return a + (t * (b - a));
 }
 
-static RASF getLerpRASF() {
-	auto lerpRASF = [](std::vector<float32> startAngles, std::vector<float32> endAngles, float32 T, unsigned int numSegments) {
+static RASF getLerpRASF(float32 multiplier) {
+	auto lerpRASF = [multiplier](std::vector<float32> startAngles, std::vector<float32> endAngles, float32 T, unsigned int numSegments) {
 		float32 ret = 0.0f;
 
 		// Lerp
@@ -37,16 +38,17 @@ static RASF getLerpRASF() {
 		}
 
 		float32 invNumSegments = 1.0f / (float32)numSegments;
-
-		ret = invNumSegments * lerp(-start, end, T);
+		float32 minimizer = 0.1f;
+		ret = multiplier * invNumSegments * lerp(-start, end, T);
+		//ret = multiplier * minimizer * lerp(-start, end, T);
 		return ret;
 	};
 
 	return lerpRASF;
 }
 
-static RASF getAveAngleRASF() {
-	auto aveAngleRASF = [](std::vector<float32> startAngles, std::vector<float32> endAngles, float32 T, unsigned int numSegments) {
+static RASF getAveAngleRASF(float32 multiplier) {
+	auto aveAngleRASF = [multiplier](std::vector<float32> startAngles, std::vector<float32> endAngles, float32 T, unsigned int numSegments) {
 
 		float32 invNumSegments = 1.0f / (float32)numSegments;
 
@@ -54,7 +56,7 @@ static RASF getAveAngleRASF() {
 		for (float32 angle : startAngles) averageAngle += -angle;
 		for (float32 angle : endAngles) averageAngle += angle;
 		averageAngle /= startAngles.size() + endAngles.size();
-		return invNumSegments * averageAngle;
+		return multiplier * invNumSegments * averageAngle;
 
 	};
 
@@ -89,6 +91,25 @@ static RASF getSINWaveRASF(float32 multiplier) {
 	return SINWaveRASF;
 }
 
+static RASF getPseudorandomRASF(float32 multiplier) {
+	auto pseudoRandRASF = [multiplier](std::vector<float32> startAngles, std::vector<float32> endAngles, float32 T, unsigned int numSegments) {
+		float32 ret = 0;
+		unsigned int numInLine = T * numSegments;
+		float32 minimizer = 0.4;
+
+		// Alternate positive and negative random float
+		if (numInLine % 2 == 0) {
+			ret = minimizer * RandomFloat(-90.0f * DEGTORAD, -30.0f * DEGTORAD);
+		}
+		else {
+			ret = minimizer * RandomFloat(30.0f * DEGTORAD, 90.0f * DEGTORAD);
+		}
+		return ret;
+	};
+
+	return pseudoRandRASF;
+}
+
 // type: Type of rest angle function to get
 // value: parameter for rest angle function (depends on type)
 static RASF getRASF(RASF_TYPE type, float32 value = 1.0f) {
@@ -96,16 +117,19 @@ static RASF getRASF(RASF_TYPE type, float32 value = 1.0f) {
 	case RASF_CONSTANT:
 		return getConstantRASF(value);
 	case RASF_AVERAGE:
-		return getAveAngleRASF();
+		return getAveAngleRASF(value);
 		break;
 	case RASF_BASIC_LERP:
-		return getLerpRASF();
+		return getLerpRASF(value);
 		break;
 	case RASF_RANDOMIZED:
 		return getRandomizedRASF(value);
 		break;
 	case RASF_SINWAVE:
 		return getSINWaveRASF(value);
+		break;
+	case RASF_PSEUDORANDOM:
+		return getPseudorandomRASF(value);
 		break;
 	default:
 		return getConstantRASF(value);
