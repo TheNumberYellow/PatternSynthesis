@@ -189,7 +189,7 @@ void SpringWorld::createSpringLine(b2Vec2 from, b2Vec2 to, unsigned int numSegme
 	if (dynamic) sectionBodyDef.type = b2_dynamicBody;
 	
 	sectionBodyDef.angularDamping = 2.0f; // TODO: May change this
-	sectionBodyDef.linearDamping = 2.0f; // TODO: and this
+	sectionBodyDef.linearDamping = 4.0f; // TODO: and this
 
 	b2Body* firstBody = nullptr;
 	b2Body* lastBody = nullptr;
@@ -309,7 +309,7 @@ void SpringWorld::drawTree(float32 x1, float32 y1, float32 angle, int depth, RAS
 		float32 y2 = (y1 + std::sin(angle) * depth * 1.05f);
 
 		float32 distance = b2Distance(b2Vec2(x1, y1), b2Vec2(x2, y2));
-		unsigned int numSegments = distance * 2.0f; // TODO: Too many segments may lead to glitchyness? Not sure exactly, will look into box2d 
+		unsigned int numSegments = distance * 4.0f; // TODO: Too many segments may lead to glitchyness? Not sure exactly, will look into box2d 
 
 		if (numSegments == 0) numSegments = 1;
 
@@ -325,6 +325,7 @@ void SpringWorld::drawRandomizedTree(float32 x1, float32 y1, float32 angle, int 
 {
 	if (depth) {
 		float32 randDist = RandomFloat(0.1f, 1.4f);
+		//std::cout << randDist << std::endl;
 		float32 x2 = (x1 + std::cos(angle) * depth * randDist);
 		float32 y2 = (y1 + std::sin(angle) * depth * randDist);
 

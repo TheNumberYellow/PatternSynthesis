@@ -15,7 +15,7 @@ Voronoi::Voronoi(float32 width, float32 height, std::vector<b2Vec2> points) {
 
 Voronoi::Voronoi(float32 width, float32 height, unsigned int numPoints, VoronoiDistributionType distribType)
 {
-	srand(time(NULL));
+	//srand(time(NULL));
 	std::vector<b2Vec2> randomPoints;
 	float32 minX = -width / 2.0f;
 	float32 minY = -height / 2.0f;

@@ -95,6 +95,8 @@ RASF_TYPE decideRASFType() {
 	std::cout << "Press [4] for randomized RASF." << std::endl;
 	std::cout << "Press [5] for SIN wave RASF." << std::endl;
 	std::cout << "Press [6] for pseudorandomized RASF." << std::endl;
+	std::cout << "Press [7] for sequential SIN wave RASF." << std::endl;
+	std::cout << "Press [8] for sequential SIN wave + LERP RASF." << std::endl;
 
 	int input = 0;
 	std::cin >> input;
@@ -111,6 +113,10 @@ RASF_TYPE decideRASFType() {
 		return RASF_SINWAVE;
 	case 6:
 		return RASF_PSEUDORANDOM;
+	case 7:
+		return RASF_SEQUENTIAL_SIN;
+	case 8:
+		return RASF_SEQUENTIAL_SIN_PLUS_LERP;
 	default:
 		return RASF_CONSTANT;
 	}
@@ -127,11 +133,20 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 		std::cout << "Press [6] for randomized fractal tree diagram." << std::endl;
 		std::cout << "Press [7] for uniformly random Voronoi diagram." << std::endl;
 		std::cout << "Press [8] for uniform grid." << std::endl;
-		int input;
+		
+		std::cout << std::endl;
+
+		std::cout << "Press [a] for LERP Voronoi diagram." << std::endl;
+		std::cout << "Press [b] for tree diagram." << std::endl;
+		std::cout << "Press [c] for... really basic \"scales\" diagram." << std::endl;
+		std::cout << "Press [d] for dried mud cracks-esque diagram." << std::endl;
+		std::cout << "Press [e] for consecutive sine waves diagram." << std::endl;
+
+		char input;
 		std::cin >> input;
 		
 		switch (input) {
-		case 1:
+		case '1':
 		{
 			unsigned int springs = 0;
 			RASF_TYPE type;
@@ -144,11 +159,11 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 			std::cin >> restAngle;
 
 			std::cout << "Creating line." << std::endl;
-			sWorld->createSpringLine(b2Vec2(-10.0f, 0.0f), b2Vec2(10.0f, 0.0f), springs, getConstantRASF(restAngle));
+			sWorld->createSpringLine(b2Vec2(-10.0f, 0.0f), b2Vec2(10.0f, 0.0f), springs, getSequentialSinRASF(restAngle));
 			sWorld->initSpringWorld();
 		}
 			return;
-		case 2:
+		case '2':
 		{
 			unsigned int sideSprings = 0;
 			RASF_TYPE type;
@@ -166,7 +181,7 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 			sWorld->createSpringBox(sideSprings, type, rasfValue);
 		}
 			return;
-		case 3:
+		case '3':
 		{
 			unsigned int sideSprings = 0;
 			RASF_TYPE type;
@@ -185,7 +200,7 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 
 			return;
 		}
-		case 4:
+		case '4':
 		{
 			unsigned int numPoints = 0;
 			RASF_TYPE type;
@@ -206,7 +221,7 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 			sWorld->createSystem(b, v.edges, type, rasfValue);
 		}
 			return;
-		case 5:
+		case '5':
 		{
 			unsigned int fractalDepth = 0;
 			RASF_TYPE type;
@@ -223,7 +238,7 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 			sWorld->createFractalTree(fractalDepth, type, rasfValue);
 		}
 			return;	
-		case 6:
+		case '6':
 		{
 			unsigned int fractalDepth = 0;
 			RASF_TYPE type;
@@ -240,7 +255,7 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 			sWorld->createRandomizedFractalTree(fractalDepth, type, rasfValue);
 		}
 			return;
-		case 7:
+		case '7':
 		{
 			unsigned int numPoints = 0;
 			RASF_TYPE type;
@@ -261,7 +276,7 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 			sWorld->createSystem(b, v.edges, type, rasfValue);
 		}
 			return;
-		case 8:
+		case '8':
 		{
 			unsigned int numPoints = 0;
 			RASF_TYPE type;
@@ -277,9 +292,43 @@ void decidePatternToCreate(SpringWorld* sWorld, unsigned int screenWidth, unsign
 
 			std::cout << "Creating Voronoi diagram." << std::endl;
 
-			Voronoi v(screenWidth* INVSCALE, screenHeight* INVSCALE, numPoints * numPoints, UNIFORM);
+			Voronoi v(screenWidth* INVSCALE, screenHeight * INVSCALE, numPoints * numPoints, UNIFORM);
 			Border b((-(int)screenWidth / 2.0f), (-(int)screenHeight / 2.0f), ((int)screenWidth / 2.0f), ((int)screenHeight / 2.0f));
 			sWorld->createSystem(b, v.edges, type, rasfValue);
+		}
+			return;
+		case 'a':
+		{
+			Voronoi v(screenWidth* INVSCALE, screenHeight * INVSCALE, 100, RANDOM);
+			Border b((-(int)screenWidth / 2.0f), (-(int)screenHeight / 2.0f), ((int)screenWidth / 2.0f), ((int)screenHeight / 2.0f));
+			sWorld->createSystem(b, v.edges, RASF_BASIC_LERP, 1.0f);
+		}
+			return;
+		case 'b':
+		{
+			sWorld->createRandomizedFractalTree(7, RASF_RANDOMIZED, 2.0f);
+		}
+			return;
+		case 'c':
+		{
+			Voronoi v(screenWidth* INVSCALE, screenHeight * INVSCALE, 10 * 10, UNIFORM);
+			Border b((-(int)screenWidth / 2.0f), (-(int)screenHeight / 2.0f), ((int)screenWidth / 2.0f), ((int)screenHeight / 2.0f));
+			sWorld->createSystem(b, v.edges, RASF_CONSTANT, 10.0f);
+		}
+			return;
+		case 'd':
+		{
+			Voronoi v(screenWidth* INVSCALE, screenHeight * INVSCALE, 100, UNIFORM_RANDOM);
+			Border b((-(int)screenWidth / 2.0f), (-(int)screenHeight / 2.0f), ((int)screenWidth / 2.0f), ((int)screenHeight / 2.0f));
+			sWorld->createSystem(b, v.edges, RASF_PSEUDORANDOM, 1.0f);
+		}
+			return;
+		case 'e':
+		{
+			Voronoi v(screenWidth* INVSCALE, screenHeight* INVSCALE, 40, UNIFORM_RANDOM);
+			Border b((-(int)screenWidth / 2.0f), (-(int)screenHeight / 2.0f), ((int)screenWidth / 2.0f), ((int)screenHeight / 2.0f));
+			sWorld->createSystem(b, v.edges, RASF_SEQUENTIAL_SIN, 1.0f);
+
 		}
 			return;
 		default:
@@ -297,7 +346,7 @@ void printHelpText() {
 }
 
 int main() {
-	srand(time(NULL));
+	srand(time(0));
 
 	// Create world, without gravity
 	b2Vec2 gravity(0.0f, 0.0f);
@@ -307,15 +356,12 @@ int main() {
 	unsigned int screenHeight = 1000;
 	
 	decidePatternToCreate(&sWorld, screenWidth, screenHeight);
-	
 
 	// Create window
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 4;
 	sf::RenderWindow window(sf::VideoMode(screenWidth, screenHeight), "PS", sf::Style::Default, settings);
 	window.setFramerateLimit(0); // TODO: maybe enable vsync and just make springs faster (not that it matters for pattern synthesis)
-
-	time_t timeStart = time(NULL);
 
 	std::cout << "There are " << sWorld.getWorld()->GetBodyCount() << " bodies in the scene." << std::endl;
 	
